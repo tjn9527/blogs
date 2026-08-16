@@ -1,0 +1,56 @@
+baseURL = 'https://tjn9527.github.io/blogs/'
+languageCode = 'zh-cn'
+title = "Andy's Tech Blog"
+theme = 'PaperMod'
+enableRobotsTXT = true
+
+[params]
+  env = 'production'
+  DateFormat = '2006-01-02'
+  defaultTheme = 'auto'
+  disableThemeToggle = false
+  ShowReadingTime = true
+  ShowShareButtons = false
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowWordCount = true
+  ShowToc = true
+  TocOpen = false
+  description = 'Python 后端工程师的个人技术博客'
+
+  [params.homeInfoParams]
+    Title = "Hi, I'm Andy 👋"
+    Content = "Python 后端工程师，记录技术学习、项目实践与思考。"
+
+[[params.socialIcons]]
+  name = 'github'
+  url = 'https://github.com/tjn9527'
+
+[[params.socialIcons]]
+  name = 'linkedin'
+  url = 'https://www.linkedin.com/in/健宁-唐-aa73331bb'
+
+[[menu.main]]
+  identifier = 'home'
+  name = '首页'
+  url = '/'
+  weight = 1
+
+[[menu.main]]
+  identifier = 'about'
+  name = '关于'
+  url = '/about/'
+  weight = 2
+
+[[menu.main]]
+  identifier = 'archives'
+  name = '归档'
+  url = '/archives/'
+  weight = 3
+
+[[menu.main]]
+  identifier = 'search'
+  name = '搜索'
+  url = '/search/'
+  weight = 4

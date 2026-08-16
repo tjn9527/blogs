@@ -165,25 +165,40 @@ if [[ -z "$COMMIT_MSG" ]]; then
 fi
 git commit -m "$COMMIT_MSG" >/dev/null
 echo "  · 已提交: $COMMIT_MSG"
+OLD_RUN=$(gh run list --workflow hugo.yml --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || echo "")
 git push
 echo "  · 已推送，等待 GitHub Actions 构建部署..."
 
 # ---- 6. 等待部署并验证线上 --------------------------------------------------------------------
 echo ""
 echo "[6/6] 等待部署"
-RUN_ID=$(gh run list --workflow hugo.yml --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || true)
+# push 后轮询等待"新的"运行出现（GitHub 事件同步有延迟，直接查可能拿到旧 run）
+RUN_ID=""
+for _ in $(seq 1 20); do
+  LATEST=$(gh run list --workflow hugo.yml --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || echo "")
+  if [[ -n "$LATEST" && "$LATEST" != "$OLD_RUN" ]]; then RUN_ID="$LATEST"; break; fi
+  sleep 5
+done
 if [[ -n "$RUN_ID" ]]; then
-  gh run watch "$RUN_ID" --exit-status >/dev/null 2>&1 \
-    && ok "Actions 部署成功" \
-    || { fail "Actions 运行失败，查看: gh run view $RUN_ID"; exit 1; }
+  echo "  · 找到本次部署运行 #$RUN_ID，等待完成..."
+  if gh run watch "$RUN_ID" --exit-status >/dev/null 2>&1; then
+    ok "Actions 部署成功"
+  else
+    fail "Actions 运行失败，查看: gh run view $RUN_ID"
+    exit 1
+  fi
 else
-  warn "未能读取运行 ID，请手动查看: gh run list"
+  warn "100 秒内未发现新运行，请手动查看: gh run list"
 fi
 
 if [[ -n "$BASEURL" ]]; then
   CODE=$(curl -sL -o /dev/null -w '%{http_code}' "$BASEURL" || true)
-  [[ "$CODE" == "200" ]] && ok "线上验证: $BASEURL → HTTP 200" \
-                       || fail "线上验证失败: HTTP $CODE（可能仍在部署，稍后访问）"
+  if [[ "$CODE" == "200" ]]; then
+    ok "线上验证: $BASEURL → HTTP 200"
+  else
+    fail "线上验证失败: HTTP $CODE（可能仍在部署，稍后访问）"
+    exit 1
+  fi
 fi
 
 echo ""

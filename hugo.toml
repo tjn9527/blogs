@@ -3,6 +3,7 @@ languageCode = 'zh-cn'
 title = "Andy's Tech Blog"
 theme = 'PaperMod'
 enableRobotsTXT = true
+enableGitInfo = true
 
 [params]
   env = 'production'
@@ -10,6 +11,7 @@ enableRobotsTXT = true
   defaultTheme = 'auto'
   disableThemeToggle = false
   ShowReadingTime = true
+  ShowLastMod = true
   ShowShareButtons = false
   ShowPostNavLinks = true
   ShowBreadCrumbs = true

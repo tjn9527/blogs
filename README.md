@@ -116,7 +116,7 @@ hugo new posts/文章名.md      # 文件名用英文 kebab-case，如 python-fa
 ```yaml
 ---
 title: "文章标题"            # 必填
-date: 2026-08-16            # 必填，YYYY-MM-DD
+date: 2026-08-16            # 必填，YYYY-MM-DD（按站点时区 Asia/Shanghai 解析）
 tags: ["Python", "后端"]     # 可选
 categories: ["技术"]         # 可选
 draft: false                # true=草稿不发布；false=发布
@@ -195,6 +195,10 @@ git push
     assets/images/ 并把引用改写成 `/images/xxx.png`（`--check` 只看不改），
     `./scripts/publish.sh` 第 4 步也会自动跑一遍
 - **草稿**：`draft: true` 不上线，`hugo server -D` 可预览
+- **日期**：`hugo.toml` 里 `timeZone = 'Asia/Shanghai'`，所以 `date: 2026-08-16`
+  表示北京时间当天 0 点。删掉这行会退回 Hugo 默认的 UTC：北京时间当天 8 点前，
+  当天日期的文章会被当成"未来文章"静默丢弃（构建和部署都成功，文章却 404）。
+  想确认有没有被丢掉的：`hugo list future`（空 = 没有）。
 
 ## 常见问题
 
@@ -205,6 +209,7 @@ git push
 | 搜索没反应 / 搜不到 | `curl -I https://tjn9527.github.io/blogs/index.json` 应为 200；404 说明 `hugo.toml` 少了 `[outputs] home` 里的 `JSON` |
 | 分类/标签页标题是英文 | 补 `content/categories/_index.md`、`content/tags/_index.md` 的 `title`；其他界面英文改 `i18n/zh-cn.yaml` |
 | 提交不进贡献图 | git 提交邮箱需与 GitHub 账号邮箱一致 |
+| 文章没显示但文件在 | `hugo list future` 看是否日期在未来（见「日期」）；或 `draft: true` |
 | 构建报 Hugo 版本错 | 本地与 workflow 的 HUGO_VERSION 保持一致（当前 0.165.0） |
 
 更多细节见 **[PUBLISHING.md](./PUBLISHING.md)**（文章规范、定时发布、

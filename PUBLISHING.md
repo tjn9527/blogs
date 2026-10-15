@@ -39,12 +39,14 @@ cd blogs
 1. 环境检查：hugo 是否可用、gh 是否已登录
 2. Git 检查：是否在仓库内、当前分支、提交邮箱是否为 GitHub 邮箱
 3. 文章检查：遍历 content/posts/**/*.md，检查 front matter 是否完整
-   （必须有 title、date；draft 状态会被明确列出。
+   （必须有 title、date；draft 状态会被明确列出；**待发布文章的 date 若在当前时间之后会报错**——
+   Hugo 默认不构建未来文章，这种文章会被静默丢弃、线上看不到。见第 6 节「日期」。
      about/archives/search 等特殊页面不属于文章，不参与检查；
      `_index.md` 是章节/列表索引文件，同样跳过）
-4. 构建验证：本地 hugo --minify --gc 全量构建，失败即中止
-5. 发布：git add → 显示变更摘要 → 确认 → commit → push
-6. 部署验证：等待 Actions 完成，curl 检查线上地址返回 200
+4. 图片整理：跑 scripts/sync-images.py 把图片搬进 assets/images/ 并统一引用写法
+5. 构建验证：本地 hugo --minify --gc 全量构建，失败即中止
+6. 发布：git add → 显示变更摘要 → 确认 → commit → push
+7. 部署验证：等待 Actions 完成，curl 检查线上地址返回 200
 
 用法：
 
@@ -123,7 +125,7 @@ description: "可选：文章摘要，用于列表页和 SEO"
 | 字段 | 必填 | 说明 |
 |---|---|---|
 | `title` | ✅ | 文章标题，显示在页面和列表 |
-| `date` | ✅ | 发布日期，格式 YYYY-MM-DD |
+| `date` | ✅ | 发布日期，格式 YYYY-MM-DD（按 `hugo.toml` 的 `timeZone` 解析） |
 | `tags` | ❌ | 标签，逗号分隔数组，自动生成标签页 |
 | `categories` | ❌ | 分类，数组，自动生成分类页 |
 | `draft` | ❌ | `true` = 草稿（不发布），`false` = 正式发布 |
@@ -138,6 +140,11 @@ description: "可选：文章摘要，用于列表页和 SEO"
 - **草稿**：`draft: true` 的文章 push 后不会出现在站点，本地用
   `hugo server -D` 预览；定稿后改成 `false` 再 push。
 - **修改已发布文章**：直接改文件 push，Actions 会重新构建整站。
+- **`date` 只写日期 = 当天 00:00（站点时区）**：`hugo.toml` 里设了
+  `timeZone = 'Asia/Shanghai'`，`date: 2026-10-16` 就是北京时间当天 0 点，当天写当天发能立刻上线。
+  不要删这一行配置：Hugo 默认按 **UTC** 解析裸日期，北京时间当天 8 点之前，所有"当天日期"的文章
+  都算未来时间而被静默丢弃（构建成功、Actions 成功、首页 200，但那篇文章 404）。
+  `publish.sh` 第 3 步会拦这种情况：待发布的文章日期在未来会直接报错。
 - **定时发布（局限性说明）**：把 `date` 设为未来时间，Hugo 默认不会渲染
   未来文章（`hugo` 不带 `--buildFuture` 时）。注意：Actions 只在 push 时构建，
   到点不会自动重新构建，所以真正定时发布需要额外加一个 cron workflow
@@ -181,7 +188,7 @@ description: "可选：文章摘要，用于列表页和 SEO"
 | 构建报错 Hugo 版本相关 | 检查 .github/workflows/hugo.yml 里 HUGO_VERSION 与本地一致 |
 | 本地预览正常但线上 404 | 检查 hugo.toml 的 baseURL 是否正确（项目站点需带 /blogs/ 路径） |
 | 提交没计入 GitHub 贡献图 | git 提交邮箱与 GitHub 账号邮箱不一致，`git config --global user.email` 改成 GitHub 邮箱 |
-| 文章没显示但文件在 | 检查 `draft: true` 或 `date` 是未来日期 |
+| 文章没显示但文件在 | 检查 `draft: true` 或 `date` 是未来日期（`hugo list future` 可列出全部未来文章；`date` 只写 YYYY-MM-DD 时按 `hugo.toml` 的 `timeZone` 解析，缺 `timeZone` 会按 UTC 算）。publish.sh 第 3 步会直接报错提示 |
 | 搜索框点不动 / 搜不到东西 | 索引缺失：`curl -I https://tjn9527.github.io/blogs/index.json` 应返回 200。404 说明 `hugo.toml` 的 `[outputs] home` 没有 `JSON`（见第 6 节「搜索」）。控制台里 `fetch('../index.json')` 报 404 是同一个原因 |
 | 搜索能出结果但中文不相关 | 调小 `[params.fuseOpts] threshold`（0.25 比默认 0.4 严格），改完重新构建 |
 | 分类页标题显示 Categories / 文案是英文 | 建 `content/categories/_index.md`（标题写中文）；其余界面文案在 `i18n/zh-cn.yaml`（主题的 `zh.yaml` 对 `zh-cn` 不生效） |

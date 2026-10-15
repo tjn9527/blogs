@@ -9,6 +9,14 @@ theme = 'PaperMod'
 enableRobotsTXT = true
 enableGitInfo = true
 
+# 时区必须显式写：front matter 里只写 `date: 2026-10-16`（不带时间/时区）时，
+# Hugo 按这里的 timeZone 解析，默认值是 UTC —— 于是"今天"的文章实际是
+# 2026-10-16T00:00:00Z = 北京时间早上 8 点，在本地和 Actions 构建时都还在未来。
+# Hugo 默认 buildFuture=false，这类文章会被**静默丢弃**：构建成功、部署成功、
+# 首页 200，但那篇文章 404（发布日志里也只有"警告"，看不出问题）。
+# 写成 Asia/Shanghai 后，只在 date 里写当天日期 = 立刻发布。
+timeZone = 'Asia/Shanghai'
+
 # 首页额外输出 index.json —— PaperMod 搜索页的索引数据源。
 # 缺这一项时构建产物里没有 index.json，搜索页的 fetch('../index.json') 报 404，
 # 搜索框会一直停留在 disabled 状态（看起来像"搜索坏了"）。

@@ -89,7 +89,7 @@ if [[ "$UNTRACKED" -eq 0 ]]; then
   echo "  · 工作区干净，无待发布内容"
 else
   echo "  · 待发布变更 $UNTRACKED 项："
-  git status --porcelain | sed 's/^/      /'
+  git -c core.quotePath=false status --porcelain | sed 's/^/      /'
 fi
 
 # ---- 3. 文章 front matter 检查 ---------------------------------------------------------
@@ -111,6 +111,25 @@ while IFS= read -r f; do
     warn "$rel: 是草稿（draft: true），发布后不会显示"
   fi
 done < <(find content/posts -name '*.md' -type f -not -name '_index.md')
+
+# 未来日期的文章 Hugo 默认不构建（buildFuture=false），会静默从站点消失：
+# 构建成功、Actions 成功、首页 200，但那篇文章 404。这里提前发现。
+# 只写 `date: YYYY-MM-DD` 时按 hugo.toml 的 timeZone 解析；时区写错的话"今天"的文章也会是未来时间。
+if command -v hugo >/dev/null 2>&1; then
+  FUTURE_ROWS=$(hugo list future 2>/dev/null | tail -n +2 || true)
+  while IFS= read -r row; do
+    [[ -z "$row" ]] && continue
+    fpath="${row%%,*}"; fdate="$(printf '%s' "$row" | awk -F',' '{print $4}')"
+    fdraft="$(printf '%s' "$row" | awk -F',' '{print $7}')"
+    [[ "$fdraft" == "true" ]] && continue   # 草稿另有提示
+    if git status --porcelain -- "$fpath" | grep -q .; then
+      fail "$fpath: date $fdate 在当前时间之后，本次发布会**静默丢掉这篇文章**（Hugo 默认不构建未来文章）；请把 date 改成已过去的时间"
+      BAD=1
+    else
+      warn "$fpath: date $fdate 在未来，暂时不会出现在站点上"
+    fi
+  done <<< "$FUTURE_ROWS"
+fi
 [[ "$BAD" -eq 0 ]] && ok "全部 $(find content/posts -name '*.md' -not -name '_index.md' | wc -l) 篇文章元信息完整"
 
 # ---- 4. 图片引用整理 ---------------------------------------------------------------------
@@ -178,7 +197,7 @@ fi
 git add -A
 if [[ -z "$COMMIT_MSG" ]]; then
   # 自动生成 commit 消息：只列本次改动的文章文件（section 索引 _index.md 不算文章）
-  files=$(git diff --cached --name-only | grep -E '^content/posts/.+\.md$' | grep -v '_index\.md$' | sed 's#content/posts/##; s#\.md$##' || true)
+  files=$(git -c core.quotePath=false diff --cached --name-only | grep -E '^content/posts/.+\.md$' | grep -v '_index\.md$' | sed 's#content/posts/##; s#\.md$##' || true)
   if [[ -n "$files" ]]; then
     COMMIT_MSG="post: $(echo "$files" | tr '\n' ',' | sed 's/,$//')"
   else

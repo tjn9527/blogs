@@ -1,0 +1,68 @@
+/* 文章目录固定侧栏
+ *
+ * 做什么：宽屏（≥1320px）把文章里那个 details.toc 从正文流里「钉」到文章右侧留白区，
+ *        不随正文滚动；目录过长时侧栏自己滚动（标题行 sticky 常显）。
+ * 窄屏：完全不生效，保持 PaperMod 原样（正文顶部一个可折叠目录）。
+ * 折叠态由 layouts/_partials/extend_footer.html 里的小脚本控制（宽屏自动展开）。
+ *
+ * 几何：文章列 .main 宽 = --main-width(720) + --gap*2(48) = 768px，居中。
+ *      侧栏左边缘对齐文章列右边距盒外沿 = 50% + --main-width/2 + --gap = 50% + 384px
+ *      （正文文字右边缘到侧栏实际间隔 48px = 文章列右 padding + 这段 gap）。
+ *      侧栏右边缘 = 50% + 384 + 220 = 50% + 604px，视口 ≥ 1256px 就与正文互不重叠，
+ *      取 1320px 作断点留余量（同时在 1320px 宽时距右边缘还有 56px）。
+ *      右下角「回到顶部」按钮固定占 bottom 64~104px：这里把侧栏高度上限卡在 100vh - 220px，
+ *      长目录改为侧栏内部滚动（标题行 sticky 常显），与按钮不会碰。
+ */
+
+@media (min-width: 1320px) {
+    .post-single > details.toc {
+        position: fixed;
+        top: calc(var(--header-height) + var(--gap)); /* 60 + 24 = 84px */
+        left: calc(50% + var(--main-width) / 2 + var(--gap)); /* 50% + 384px */
+        width: 220px;
+        max-height: calc(100vh - 220px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        margin-bottom: 0;
+        z-index: 90; /* 低于 .top-link(99) 和主题的浮层 */
+        font-size: 14px;
+    }
+
+    /* 目录条目少时不要占满高度，交给内容撑开 */
+    .post-single > details.toc > .inner {
+        padding-bottom: 0.4rem;
+    }
+
+    /* 标题行（「目录」）常显，长目录滚动时不被滚走 */
+    .post-single > details.toc > summary {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: inherit;
+        border-radius: var(--radius);
+        cursor: pointer;
+    }
+
+    /* 侧栏较窄：条目行距收紧、长标题允许换行但避免撑破盒子 */
+    .post-single > details.toc .inner ul {
+        padding-inline-start: 1.2rem;
+        margin: 0 0 0.4rem;
+    }
+
+    .post-single > details.toc .inner li {
+        padding: 3px 0;
+    }
+
+    .post-single > details.toc .inner a {
+        overflow-wrap: anywhere;
+    }
+}
+
+/* 打印时回到正文流，避免目录固定在纸张的某个位置 */
+@media print {
+    .post-single > details.toc {
+        position: static;
+        max-height: none;
+        width: auto;
+    }
+}

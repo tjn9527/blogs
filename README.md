@@ -173,6 +173,15 @@ git push
 - **搜索**：搜索页 `/search/` 依赖构建产物 `index.json`，由 `hugo.toml` 的
   `[outputs] home = ['HTML','RSS','JSON']` 开启（缺了它搜索框会一直是灰的）。
   相关性参数在 `[params.fuseOpts]`（threshold 越小越严格，当前 0.25）。
+- **文章目录（侧栏）**：宽屏（视口 ≥1320px）时文章目录固定在正文右侧留白区，不随正文滚动；
+  目录过长时侧栏内部滚动，标题行常显。窄屏保持主题默认（正文顶部可折叠目录）。
+  - 样式：`assets/css/extended/toc-sidebar.css`（PaperMod 自动加载该目录，无需改主题）
+  - 宽屏自动展开：`layouts/_partials/extend_footer.html` 里的一小段脚本（窄屏不展开；
+    用户手动点过目录标题后不再干预）
+  - 改断点/宽度：改 CSS 里 `@media (min-width: 1320px)` 与 `width: 220px` 两处
+    （同时把脚本里的 `(min-width: 1320px)` 改成同一个值，否则展开时机与布局不一致）
+  - 想要左侧：把 CSS 里 `left: calc(...)` 换成 `right: calc(50% + var(--main-width) / 2 + var(--gap))`
+  - 想彻底关掉：删掉 `assets/css/extended/toc-sidebar.css`
 - **界面文案**：中文文案在 `i18n/zh-cn.yaml`（主题的 `zh.yaml` 匹配不上 `zh-cn` 会回落英文）
 - **加图片**：图片放 `assets/images/`，文中引用 `/images/xxx.png`
   · 为什么不放 static/：站点在 `/blogs/` 子路径下，只有 assets/ 里的资源会被项目级

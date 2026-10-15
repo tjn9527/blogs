@@ -185,6 +185,7 @@ description: "可选：文章摘要，用于列表页和 SEO"
 | 搜索框点不动 / 搜不到东西 | 索引缺失：`curl -I https://tjn9527.github.io/blogs/index.json` 应返回 200。404 说明 `hugo.toml` 的 `[outputs] home` 没有 `JSON`（见第 6 节「搜索」）。控制台里 `fetch('../index.json')` 报 404 是同一个原因 |
 | 搜索能出结果但中文不相关 | 调小 `[params.fuseOpts] threshold`（0.25 比默认 0.4 严格），改完重新构建 |
 | 分类页标题显示 Categories / 文案是英文 | 建 `content/categories/_index.md`（标题写中文）；其余界面文案在 `i18n/zh-cn.yaml`（主题的 `zh.yaml` 对 `zh-cn` 不生效） |
+| 文章目录没有固定在侧边 | 只在视口 ≥1320px 生效（窄屏是主题原样：正文顶部可折叠目录）。宽屏下仍不固定，先确认 `assets/css/extended/toc-sidebar.css` 存在，再比对页面引用的 `stylesheet.<hash>.css` 与本地 `hugo` 构建产物是否同一个 hash（不一致说明服务端/本地是旧构建） |
 
 ---
 

@@ -1,0 +1,25 @@
+{{- /* 站点扩展：宽屏时自动展开文章目录（侧栏需要常显内容）。
+       窄屏保持主题默认的折叠态，不改变手机阅读体验。
+       与 assets/css/extended/toc-sidebar.css 的断点必须一致：1320px。
+       用户手动点过目录标题后不再自动干预（尊重用户的折叠选择）。 */ -}}
+<script>
+    (function () {
+        var toc = document.querySelector('.post-single > details.toc');
+        if (!toc || !window.matchMedia) return;
+
+        var mq = window.matchMedia('(min-width: 1320px)');
+        var userToggled = false;
+        var summary = toc.querySelector('summary');
+        if (summary) {
+            summary.addEventListener('click', function () { userToggled = true; });
+        }
+
+        var sync = function (matches) {
+            if (!userToggled) toc.open = matches;
+        };
+        sync(mq.matches);
+        if (mq.addEventListener) {
+            mq.addEventListener('change', function (e) { sync(e.matches); });
+        }
+    })();
+</script>

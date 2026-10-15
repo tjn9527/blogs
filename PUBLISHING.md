@@ -23,7 +23,7 @@
 推荐直接用自动化脚本（见第 3 节），首次使用：
 
 ```bash
-cd /mnt/c/Users/tjn/Documents/notes/Career/blogs
+cd blogs
 ./scripts/publish.sh --dry-run   # 先体检：环境、git 状态、文章元信息、构建
 ./scripts/publish.sh             # 正式发布：检查 → 确认 → 提交推送 → 等部署 → 验证
 ```
@@ -62,7 +62,7 @@ cd /mnt/c/Users/tjn/Documents/notes/Career/blogs
 ### 4.1 写新文章
 
 ```bash
-cd /mnt/c/Users/tjn/Documents/notes/Career/blogs
+cd blogs
 
 # 方式一：hugo 生成带模板的文章文件
 ~/.local/bin/hugo new posts/my-new-post.md
@@ -142,8 +142,15 @@ description: "可选：文章摘要，用于列表页和 SEO"
   到点不会自动重新构建，所以真正定时发布需要额外加一个 cron workflow
   定期触发构建。简单场景可直接到点手动 `gh workflow run hugo.yml`。
 - **标签/分类**：front matter 里加 `tags`/`categories` 即自动生成对应列表页。
-- **图片**：放 `static/images/`，文章里用 `/images/xxx.png` 引用；
-  图片也会随 push 部署。
+- **图片**：放 `assets/images/`，文章里用 `/images/xxx.png` 引用；
+  图片也会随 push 部署。（放 static/ 会因站点子路径 `/blogs/` 而 404）
+- **用 Obsidian 编辑博客**：把 `notes/blogs` 作为独立仓库（vault）打开，
+  附件目录已预置为 `assets/images/`（`.obsidian/app.json`），粘贴的图片直接落在那里。
+  链接写法不用管：Obsidian 的 `![[xxx.png]]` 嵌入语法 Hugo 不认，
+  但 `./scripts/publish.sh` 的第 4 步会先把所有引用整理成 `/images/xxx.png`
+  （也可手动跑 `python3 scripts/sync-images.py`，`--check` 只检查）。
+  发布前已在 `Career/attachments/` 里的图会被搬/拷进 `assets/images/`，
+  若该图同时被别的笔记引用则只复制、不删除原件。
 - **搜索**：站点自带搜索页（/search/），构建时自动生成索引，无需配置。
 
 ---

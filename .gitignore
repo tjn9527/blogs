@@ -2,3 +2,6 @@
 public/
 resources/
 .hugo_build.lock
+
+# 编辑器本地配置（Obsidian 仓库配置 / VS Code 工作区）
+.obsidian/

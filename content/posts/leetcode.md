@@ -1,9 +1,12 @@
 ---
-title: "Leetcode刷题总结"
+title: Leetcode刷题总结
 date: 2026-08-19
-tags: ["leetcode"]
-categories: ["数据结构","算法"]
-draft: true
+tags:
+  - leetcode
+categories:
+  - 数据结构
+  - 算法
+draft: false
 ---
 # 考察的算法模式
 

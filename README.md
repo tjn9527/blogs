@@ -5,7 +5,7 @@
 
 - 线上地址：https://tjn9527.github.io/blogs/
 - 源码仓库：https://github.com/tjn9527/blogs
-- 本机位置：`/mnt/c/Users/tjn/Documents/notes/Career/blogs`（WSL）
+- 本机位置：`/mnt/c/Users/tjn/Documents/notes/blogs`（WSL）
 
 ```
 本地写 Markdown ──./scripts/publish.sh──▶ GitHub ──Actions 构建──▶ GitHub Pages
@@ -33,10 +33,12 @@ blogs/
 │   ├── about.md          # 关于页（特殊页面）
 │   ├── archives.md       # 归档页（特殊页面）
 │   └── search.md         # 搜索页（特殊页面）
-├── static/images/        # 图片资源，文章用 /images/xxx.png 引用
+├── assets/images/        # 图片资源，文章用 /images/xxx.png 引用
 ├── themes/PaperMod/      # 主题（submodule）
+├── layouts/              # 项目级覆盖（_markup/render-image.html 图片解析钩子）
 ├── .github/workflows/hugo.yml   # 自动部署流水线
 ├── scripts/publish.sh    # 一键发布脚本
+├── scripts/sync-images.py # 图片引用整理（发布前自动运行）
 ├── PUBLISHING.md         # 📖 发布与管理完整规范
 └── hugo.toml             # 站点配置（标题/菜单/社交链接等）
 ```
@@ -160,7 +162,12 @@ git push
 - **删除文章**：`git rm content/posts/xxx.md` → 发布
 - **升级主题**：`git submodule update --remote themes/PaperMod` → 发布
 - **改站点配置**：编辑 `hugo.toml`（标题/菜单/社交链接）→ 发布
-- **加图片**：放入 `static/images/`，文中引用 `/images/xxx.png`
+- **加图片**：图片放 `assets/images/`，文中引用 `/images/xxx.png`
+  · 为什么不放 static/：站点在 `/blogs/` 子路径下，只有 assets/ 里的资源会被项目级
+    render-image 钩子（`layouts/_markup/render-image.html`）解析成带 `/blogs/` 前缀的 URL
+  · 粘贴进来的图不用手动收拾：`python3 scripts/sync-images.py` 会把图片搬到
+    assets/images/ 并把引用改写成 `/images/xxx.png`（`--check` 只看不改），
+    `./scripts/publish.sh` 第 4 步也会自动跑一遍
 - **草稿**：`draft: true` 不上线，`hugo server -D` 可预览
 
 ## 常见问题

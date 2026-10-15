@@ -1,0 +1,45 @@
+{{- /* 项目级 render-image 钩子（覆盖 PaperMod 主题的同名钩子）
+       目的：兼容编辑器（Obsidian / VS Code）粘贴图片时生成的多种引用写法，
+       只要图片文件在 assets/images/ 里，就都能正确解析出带 /blogs/ 前缀的 URL。
+
+       依次尝试这些解析路径（按顺序，命中即用）：
+         1. 原始路径（支持文章 page bundle 里的图片、assets/ 下的相对路径）
+         2. 去掉目录后的文件名
+         3. images/<文件名>  ← Obsidian 写到 assets/images/ 的图片走这条
+       例：../assets/images/Pasted image x.png、/assets/images/Pasted%20image%20x.png、
+           /images/Pasted image x.png、Pasted image x.png 都能命中同一个文件。
+       注意：Obsidian 的嵌入语法 ![[x.png]] Hugo 完全不解析，必须靠
+           scripts/sync-images.py 在发布前改写成 ![](/images/x.png)。 */ -}}
+{{- $u := urls.Parse .Destination -}}
+{{- $src := $u.String -}}
+{{- if not $u.IsAbs -}}
+  {{- $page := .PageInner -}}
+  {{- $path := strings.TrimPrefix "./" $u.Path -}}
+  {{- $base := path.Base $path -}}
+  {{- $candidates := slice $path $base (printf "images/%s" $base) -}}
+  {{- $res := false -}}
+  {{- range $candidates -}}
+    {{- if not $res -}}
+      {{- with or ($page.Resources.Get .) (resources.Get .) -}}
+        {{- $res = . -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- with $res -}}
+    {{- $src = .RelPermalink -}}
+    {{- with $u.RawQuery -}}
+      {{- $src = printf "%s?%s" $src . -}}
+    {{- end -}}
+    {{- with $u.Fragment -}}
+      {{- $src = printf "%s#%s" $src . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $attributes := merge .Attributes (dict "alt" .Text "src" $src "title" (.Title | transform.HTMLEscape) "loading" "lazy") -}}
+<img
+  {{- range $k, $v := $attributes -}}
+    {{- if $v -}}
+      {{- printf " %s=%q" $k $v | safeHTMLAttr -}}
+    {{- end -}}
+  {{- end -}}>
+{{- /**/ -}}

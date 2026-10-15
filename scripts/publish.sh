@@ -2,7 +2,7 @@
 # ============================================================================
 # publish.sh — 博客文章检查与一键发布
 #
-# 流程：环境检查 → git 检查 → 文章 front matter 检查 → 本地构建验证
+# 流程：环境检查 → git 检查 → 文章 front matter 检查 → 图片引用整理 → 本地构建验证
 #       → 提交推送 → 等待 Actions 部署 → 验证线上地址
 #
 # 用法：
@@ -51,7 +51,7 @@ echo "===== 博客发布工具 ===== 目录: $BLOG_DIR"
 
 # ---- 1. 环境检查 -----------------------------------------------------------------
 echo ""
-echo "[1/6] 环境检查"
+echo "[1/7] 环境检查"
 export PATH="$HOME/.local/bin:$PATH"   # 非登录 shell 的 hugo 路径
 if command -v hugo >/dev/null 2>&1; then
   ok "hugo: $(hugo version | grep -oP 'v\K[0-9.]+' | head -1)"
@@ -67,7 +67,7 @@ command -v curl >/dev/null 2>&1 || warn "curl 未安装，跳过线上验证"
 
 # ---- 2. Git 检查 -----------------------------------------------------------------
 echo ""
-echo "[2/6] Git 检查"
+echo "[2/7] Git 检查"
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   abort "当前目录不在 git 仓库内"
 fi
@@ -94,7 +94,7 @@ fi
 
 # ---- 3. 文章 front matter 检查 ---------------------------------------------------------
 echo ""
-echo "[3/6] 文章元信息检查"
+echo "[3/7] 文章元信息检查"
 BAD=0
 while IFS= read -r f; do
   rel="${f#./}"
@@ -113,9 +113,31 @@ while IFS= read -r f; do
 done < <(find content/posts -name '*.md' -type f)
 [[ "$BAD" -eq 0 ]] && ok "全部 $(find content/posts -name '*.md' | wc -l) 篇文章元信息完整"
 
-# ---- 4. 本地构建验证 --------------------------------------------------------------------
+# ---- 4. 图片引用整理 ---------------------------------------------------------------------
 echo ""
-echo "[4/6] 本地构建验证"
+echo "[4/7] 图片引用整理"
+# 把 Obsidian 嵌入语法 ![[x.png]]、编辑器粘贴生成的相对路径，统一改写成 /images/xxx.png，
+# 并把图片搬到 assets/images/（源图在 Obsidian 库 attachments/ 且被别的笔记引用时只复制不删除）
+if command -v python3 >/dev/null 2>&1; then
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    if IMG_LOG=$(python3 scripts/sync-images.py --check 2>&1); then
+      ok "图片引用规范（都在 assets/images/）"
+    else
+      warn "有图片引用待整理，正式发布会自动处理："
+      printf '%s\n' "$IMG_LOG" | sed 's/^/      /'
+    fi
+  else
+    IMG_LOG=$(python3 scripts/sync-images.py 2>&1 || true)
+    printf '%s\n' "$IMG_LOG" | sed 's/^/      /'
+    ok "图片已归位到 assets/images/ 并改写引用"
+  fi
+else
+  warn "未安装 python3，跳过图片整理（引用不规范会导致图片 404）"
+fi
+
+# ---- 5. 本地构建验证 --------------------------------------------------------------------
+echo ""
+echo "[5/7] 本地构建验证"
 if ! hugo --minify --gc >/tmp/publish-hugo-build.log 2>&1; then
   fail "hugo 构建失败，日志如下（最后 15 行）："
   tail -15 /tmp/publish-hugo-build.log | sed 's/^/      /'
@@ -145,7 +167,7 @@ fi
 
 # ---- 5. 提交与推送 ------------------------------------------------------------------------
 echo ""
-echo "[5/6] 提交并推送"
+echo "[6/7] 提交并推送"
 if [[ "$ASSUME_YES" -ne 1 ]]; then
   echo "即将提交以下变更："
   git add -A --dry-run | sed 's/^/    /'
@@ -171,7 +193,7 @@ echo "  · 已推送，等待 GitHub Actions 构建部署..."
 
 # ---- 6. 等待部署并验证线上 --------------------------------------------------------------------
 echo ""
-echo "[6/6] 等待部署"
+echo "[7/7] 等待部署"
 # push 后轮询等待"新的"运行出现（GitHub 事件同步有延迟，直接查可能拿到旧 run）
 RUN_ID=""
 for _ in $(seq 1 20); do

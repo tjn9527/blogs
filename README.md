@@ -176,10 +176,15 @@ git push
 - **文章目录（侧栏）**：宽屏（视口 ≥1320px）时文章目录固定在正文右侧留白区，不随正文滚动；
   目录过长时侧栏内部滚动，标题行常显。窄屏保持主题默认（正文顶部可折叠目录）。
   - 样式：`assets/css/extended/toc-sidebar.css`（PaperMod 自动加载该目录，无需改主题）
+  - 宽度是浮动的，跟着视口走：`width: clamp(240px, calc(50% - var(--main-width)/2 - var(--gap) - 24px), 520px)`
+    —— 左侧贴文章列右边缘，宽度吃掉右侧全部留白，上限 520px（本站最长小标题刚好一行放得下）。
+    实测：1320px→252 宽 / 1366→275 / 1440→312 / 1536→360 / 1600→392 / 1920 及以上→520。
+  - 侧栏里另有两处覆盖主题的「收窄」修正：主题 `details .inner` 的 `margin: 0 2.4rem` 和
+    `details li ul` 的 `margin-inline-start: var(--gap)` 是按 720px 宽的正文块设计的，
+    在侧栏里会吃掉上百像素，已收回（否则标题会疯狂折行）
   - 宽屏自动展开：`layouts/_partials/extend_footer.html` 里的一小段脚本（窄屏不展开；
     用户手动点过目录标题后不再干预）
-  - 改断点/宽度：改 CSS 里 `@media (min-width: 1320px)` 与 `width: 220px` 两处
-    （同时把脚本里的 `(min-width: 1320px)` 改成同一个值，否则展开时机与布局不一致）
+  - 改断点：改 CSS 里 `@media (min-width: 1320px)` 与脚本里同一个值（两处必须一致）
   - 想要左侧：把 CSS 里 `left: calc(...)` 换成 `right: calc(50% + var(--main-width) / 2 + var(--gap))`
   - 想彻底关掉：删掉 `assets/css/extended/toc-sidebar.css`
 - **界面文案**：中文文案在 `i18n/zh-cn.yaml`（主题的 `zh.yaml` 匹配不上 `zh-cn` 会回落英文）

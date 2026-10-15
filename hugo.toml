@@ -51,7 +51,7 @@ enableGitInfo = true
 
 [[params.socialIcons]]
   name = 'linkedin'
-  url = 'https://www.linkedin.com/in/健宁-唐-aa73331bb'
+  url = 'https://www.linkedin.com/in/andytang9905'
 
 [[menu.main]]
   identifier = 'home'

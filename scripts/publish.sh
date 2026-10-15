@@ -110,8 +110,8 @@ while IFS= read -r f; do
   if echo "$fm" | grep -qE '^draft:\s*true'; then
     warn "$rel: 是草稿（draft: true），发布后不会显示"
   fi
-done < <(find content/posts -name '*.md' -type f)
-[[ "$BAD" -eq 0 ]] && ok "全部 $(find content/posts -name '*.md' | wc -l) 篇文章元信息完整"
+done < <(find content/posts -name '*.md' -type f -not -name '_index.md')
+[[ "$BAD" -eq 0 ]] && ok "全部 $(find content/posts -name '*.md' -not -name '_index.md' | wc -l) 篇文章元信息完整"
 
 # ---- 4. 图片引用整理 ---------------------------------------------------------------------
 echo ""
@@ -177,8 +177,8 @@ fi
 
 git add -A
 if [[ -z "$COMMIT_MSG" ]]; then
-  # 自动生成 commit 消息：列出本次涉及的文章标题
-  files=$(git diff --cached --name-only | grep '^content/' | sed 's#content/posts/##; s#\.md$##' || true)
+  # 自动生成 commit 消息：只列本次改动的文章文件（section 索引 _index.md 不算文章）
+  files=$(git diff --cached --name-only | grep -E '^content/posts/.+\.md$' | grep -v '_index\.md$' | sed 's#content/posts/##; s#\.md$##' || true)
   if [[ -n "$files" ]]; then
     COMMIT_MSG="post: $(echo "$files" | tr '\n' ',' | sed 's/,$//')"
   else

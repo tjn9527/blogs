@@ -1,0 +1,13 @@
+/* 站点自定义样式：文章页「分类」区块（layouts/_partials/extend_post_content.html） */
+.post-categories {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.post-categories-label {
+    color: var(--secondary);
+    font-size: 14px;
+}

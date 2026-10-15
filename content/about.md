@@ -1,6 +1,7 @@
 ---
 title: "关于我"
 date: 2026-08-16
+searchHidden: true   # 不进入搜索索引（搜索页只应返回文章）
 ---
 
 Hi，我是 Andy，一名 Python 后端工程师。

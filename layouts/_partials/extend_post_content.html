@@ -1,0 +1,13 @@
+{{- /* 站点扩展：文章正文下方显示「分类」（PaperMod 默认只渲染标签）。 */ -}}
+{{- /* 位置：post-content 之后、post-footer（标签列表）之前。 */ -}}
+{{- $categories := .Language.Params.Taxonomies.category | default "categories" }}
+{{- with .GetTerms $categories }}
+<div class="post-categories">
+    <span class="post-categories-label">分类</span>
+    <ul class="post-tags">
+        {{- range . }}
+        <li><a href="{{ .Permalink }}">{{ .LinkTitle }}</a></li>
+        {{- end }}
+    </ul>
+</div>
+{{- end }}

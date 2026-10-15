@@ -1,0 +1,41 @@
+# 站点中文文案（覆盖主题自带的英文默认值）
+# 说明：主题 i18n 里只有 zh.yaml，而本站 locale 是 zh-cn，Hugo 不会把 zh-cn 回退到 zh，
+# 因此必须提供 i18n/zh-cn.yaml，否则阅读时长/目录/翻页等文案会显示英文。
+# 站点 i18n 优先于主题 i18n，这里只需要写要覆盖或补充的条目。
+
+- id: prev_page
+  translation: "上一页"
+
+- id: next_page
+  translation: "下一页"
+
+- id: read_time
+  translation:
+    one: "1 分钟"
+    other: "{{ .Count }} 分钟"
+
+- id: words
+  translation:
+    one: "字"
+    other: "{{ .Count }} 字"
+
+- id: toc
+  translation: "目录"
+
+- id: translations
+  translation: "语言"
+
+- id: home
+  translation: "主页"
+
+- id: edit_post
+  translation: "编辑"
+
+- id: code_copy
+  translation: "复制"
+
+- id: code_copied
+  translation: "已复制！"
+
+- id: go_to_top
+  translation: "回到顶部"

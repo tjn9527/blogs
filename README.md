@@ -30,17 +30,22 @@
 blogs/
 ├── content/
 │   ├── posts/            # ✅ 文章目录，Markdown 文件即文章
-│   ├── about.md          # 关于页（特殊页面）
+│   │   └── _index.md     # 「文章」列表页标题（/posts/）
+│   ├── categories/_index.md  # 「分类」页标题/描述（/categories/）
+│   ├── tags/_index.md    # 「标签」页标题/描述（/tags/）
+│   ├── about.md          # 关于页（特殊页面，searchHidden 不入搜索索引）
 │   ├── archives.md       # 归档页（特殊页面）
 │   └── search.md         # 搜索页（特殊页面）
 ├── assets/images/        # 图片资源，文章用 /images/xxx.png 引用
+├── assets/css/extended/  # 站点自定义 CSS（PaperMod 自动加载该目录）
+├── i18n/zh-cn.yaml       # 站点中文文案（覆盖主题英文，locale=zh-cn）
 ├── themes/PaperMod/      # 主题（submodule）
-├── layouts/              # 项目级覆盖（_markup/render-image.html 图片解析钩子）
+├── layouts/              # 项目级覆盖（图片钩子、文章页「分类」区块）
 ├── .github/workflows/hugo.yml   # 自动部署流水线
 ├── scripts/publish.sh    # 一键发布脚本
 ├── scripts/sync-images.py # 图片引用整理（发布前自动运行）
 ├── PUBLISHING.md         # 📖 发布与管理完整规范
-└── hugo.toml             # 站点配置（标题/菜单/社交链接等）
+└── hugo.toml             # 站点配置（标题/菜单/社交链接/搜索/输出格式）
 ```
 
 ---
@@ -161,7 +166,14 @@ git push
 - **修改文章**：编辑对应 .md → `./scripts/publish.sh`
 - **删除文章**：`git rm content/posts/xxx.md` → 发布
 - **升级主题**：`git submodule update --remote themes/PaperMod` → 发布
-- **改站点配置**：编辑 `hugo.toml`（标题/菜单/社交链接）→ 发布
+- **改站点配置**：编辑 `hugo.toml`（标题/菜单/社交链接/搜索参数）→ 发布
+- **改分类/标签**：文章 front matter 写 `categories: ["技术"]` / `tags: [...]` 即自动生成
+  对应页面（导航「分类」→ `/categories/`，「标签」→ `/tags/`），文章页底部会显示可点击的
+  分类与标签。新增分类不用改任何配置；页面标题/描述改 `content/categories/_index.md`。
+- **搜索**：搜索页 `/search/` 依赖构建产物 `index.json`，由 `hugo.toml` 的
+  `[outputs] home = ['HTML','RSS','JSON']` 开启（缺了它搜索框会一直是灰的）。
+  相关性参数在 `[params.fuseOpts]`（threshold 越小越严格，当前 0.25）。
+- **界面文案**：中文文案在 `i18n/zh-cn.yaml`（主题的 `zh.yaml` 匹配不上 `zh-cn` 会回落英文）
 - **加图片**：图片放 `assets/images/`，文中引用 `/images/xxx.png`
   · 为什么不放 static/：站点在 `/blogs/` 子路径下，只有 assets/ 里的资源会被项目级
     render-image 钩子（`layouts/_markup/render-image.html`）解析成带 `/blogs/` 前缀的 URL
@@ -176,6 +188,8 @@ git push
 |---|---|
 | push 后站点没更新 | 仓库 Actions 页看日志；确认分支是 main、repo 是 public |
 | 线上 404 | 确认 Pages 源是 GitHub Actions；repo 是否变过 private |
+| 搜索没反应 / 搜不到 | `curl -I https://tjn9527.github.io/blogs/index.json` 应为 200；404 说明 `hugo.toml` 少了 `[outputs] home` 里的 `JSON` |
+| 分类/标签页标题是英文 | 补 `content/categories/_index.md`、`content/tags/_index.md` 的 `title`；其他界面英文改 `i18n/zh-cn.yaml` |
 | 提交不进贡献图 | git 提交邮箱需与 GitHub 账号邮箱一致 |
 | 构建报 Hugo 版本错 | 本地与 workflow 的 HUGO_VERSION 保持一致（当前 0.165.0） |
 

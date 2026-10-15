@@ -40,7 +40,8 @@ cd blogs
 2. Git 检查：是否在仓库内、当前分支、提交邮箱是否为 GitHub 邮箱
 3. 文章检查：遍历 content/posts/**/*.md，检查 front matter 是否完整
    （必须有 title、date；draft 状态会被明确列出。
-     about/archives/search 等特殊页面不属于文章，不参与检查）
+     about/archives/search 等特殊页面不属于文章，不参与检查；
+     `_index.md` 是章节/列表索引文件，同样跳过）
 4. 构建验证：本地 hugo --minify --gc 全量构建，失败即中止
 5. 发布：git add → 显示变更摘要 → 确认 → commit → push
 6. 部署验证：等待 Actions 完成，curl 检查线上地址返回 200
@@ -141,7 +142,15 @@ description: "可选：文章摘要，用于列表页和 SEO"
   未来文章（`hugo` 不带 `--buildFuture` 时）。注意：Actions 只在 push 时构建，
   到点不会自动重新构建，所以真正定时发布需要额外加一个 cron workflow
   定期触发构建。简单场景可直接到点手动 `gh workflow run hugo.yml`。
-- **标签/分类**：front matter 里加 `tags`/`categories` 即自动生成对应列表页。
+- **标签/分类**：front matter 里加 `tags`/`categories` 即自动生成对应页面，不需改配置。
+  - 分类页在 `/categories/`（导航「分类」），标签页在 `/tags/`（导航「标签」）；
+    列表页按分类名（中文按拼音/Unicode 序）列出条目和文章数。
+  - 文章页底部会显示「分类」和标签，点一下即可跳到该分类/标签的文章列表
+    （分类由 `layouts/_partials/extend_post_content.html` 渲染，PaperMod 默认只显示标签）。
+  - **新增分类无需任何操作**：front matter 写一个新词即自动多出一个分类页。
+  - 分类/标签页的标题、描述在 `content/categories/_index.md`、`content/tags/_index.md` 里改。
+- **站点文案（中文）**：主题只有 `zh.yaml`，本站 locale 是 `zh-cn`，两者不匹配会回落英文
+  （阅读时长 "7 min"、目录 "Table of Contents" 等）。要调整文案改 `i18n/zh-cn.yaml`。
 - **图片**：放 `assets/images/`，文章里用 `/images/xxx.png` 引用；
   图片也会随 push 部署。（放 static/ 会因站点子路径 `/blogs/` 而 404）
 - **用 Obsidian 编辑博客**：把 `notes/blogs` 作为独立仓库（vault）打开，
@@ -151,7 +160,16 @@ description: "可选：文章摘要，用于列表页和 SEO"
   （也可手动跑 `python3 scripts/sync-images.py`，`--check` 只检查）。
   发布前已在 `Career/attachments/` 里的图会被搬/拷进 `assets/images/`，
   若该图同时被别的笔记引用则只复制、不删除原件。
-- **搜索**：站点自带搜索页（/search/），构建时自动生成索引，无需配置。
+- **搜索**：搜索页 `/search/`（导航「搜索」），索引是构建时生成的 `index.json`，
+  由 `hugo.toml` 里这两行开启——**删掉搜索立刻失效**：
+
+  ```toml
+  [outputs]
+    home = ['HTML', 'RSS', 'JSON']
+  ```
+
+  索引只收文章（`content/posts/`），`about.md` 用 `searchHidden: true` 排除在外。
+  搜索参数（Fuse.js）在 `[params.fuseOpts]`：threshold 越小越严格，默认 0.4 对中文偏松。
 
 ---
 
@@ -164,6 +182,9 @@ description: "可选：文章摘要，用于列表页和 SEO"
 | 本地预览正常但线上 404 | 检查 hugo.toml 的 baseURL 是否正确（项目站点需带 /blogs/ 路径） |
 | 提交没计入 GitHub 贡献图 | git 提交邮箱与 GitHub 账号邮箱不一致，`git config --global user.email` 改成 GitHub 邮箱 |
 | 文章没显示但文件在 | 检查 `draft: true` 或 `date` 是未来日期 |
+| 搜索框点不动 / 搜不到东西 | 索引缺失：`curl -I https://tjn9527.github.io/blogs/index.json` 应返回 200。404 说明 `hugo.toml` 的 `[outputs] home` 没有 `JSON`（见第 6 节「搜索」）。控制台里 `fetch('../index.json')` 报 404 是同一个原因 |
+| 搜索能出结果但中文不相关 | 调小 `[params.fuseOpts] threshold`（0.25 比默认 0.4 严格），改完重新构建 |
+| 分类页标题显示 Categories / 文案是英文 | 建 `content/categories/_index.md`（标题写中文）；其余界面文案在 `i18n/zh-cn.yaml`（主题的 `zh.yaml` 对 `zh-cn` 不生效） |
 
 ---
 
